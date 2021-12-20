@@ -20,10 +20,11 @@ def main():
     
     with open('inputs/d5.txt') as f:
         real_input = parse_input(f.read())
-    grid = create_grid(test_input)
-    grid = place_points(test_input, grid)
-    #overlaps = get_num_places_with_overlaps(grid)
-    #print(overlaps)
+    grid = create_grid(real_input)
+    grid = place_points(real_input, grid)
+    #print_grid(grid)
+    overlaps = get_num_places_with_overlaps(grid)
+    print(overlaps)
 
 def get_num_places_with_overlaps(filled_grid: list[list]) -> int:
     num_places_with_overlaps = 0
@@ -45,50 +46,104 @@ def place_points(inp: list[list], grid: list[list]) -> list[list]:
         x_to, y_to = row[1]
 
         if x_to == x_from:
-            grid = place_vertical()
+            #print('placing vertical', x_from, y_from, ' ', x_to, y_to)
+            grid = place_vertical(x_to, y_from, y_to, grid)
+            #print_grid(grid)
         elif y_to == y_from:
-            grid = place_horizontal()
-        else:
-            pass
+            #print('placing horizontal', x_from, y_from, ' ', x_to, y_to)
+            grid = place_horizontal(y_to, x_from, x_to, grid)
+            #print_grid(grid)
+        elif x_from < x_to and y_from < y_to:
             # place diagonal left-right up
+            grid = place_diagonal_left_down(x_from, y_from, x_to, y_to, grid)
+        elif x_from < x_to and y_from > y_to:
             # place diagonal left-right down
+            grid = place_diagonal_left_up(x_from, y_from, x_to, y_to, grid)
+        elif x_from > x_to and y_from < y_to:
             # place diagonal right-left up
+            grid = place_diagonal_right_down(x_from, y_from, x_to, y_to, grid)
+        elif x_from > x_to and y_from > y_to:
             # place diagonal right-left down
+            grid = place_diagonal_right_up(x_from, y_from, x_to, y_to, grid)
+            
         
+    return grid
 
- 
+def place_vertical(x, y_from, y_to, grid):
 
-        
-    print_grid(grid)
+    start_y = y_from if y_from < y_to else y_to
+    end_y = y_to if y_from < y_to else y_from
+
+    for y in range(start_y, end_y+1):
+        grid[y][x] += 1
+    
+    return grid
+
+def place_horizontal(y, x_from, x_to, grid):
+
+    start_x = x_from if x_from < x_to else x_to
+    end_x = x_to if x_from < x_to else x_from
+
+    #print(start_x, end_x)
+
+    for x in range(start_x, end_x+1):
+        grid[y][x] += 1
+    
+    return grid
+
+def place_diagonal_left_down(x_from, y_from, x_to, y_to, grid):
+
+    #print('diag left down', x_from, y_from, x_to, y_to)
+
+    x = x_from
+    y = y_from
+    
+    for _ in range(x_from, x_to+1):
+        grid[y][x] += 1
+        x += 1
+        y += 1
+    
+    return grid
+
+def place_diagonal_left_up(x_from, y_from, x_to, y_to, grid):
+
+    x = x_from
+    y = y_from
+    
+    for _ in range(x_from, x_to + 1):
+        grid[y][x] += 1
+        x += 1
+        y -= 1
+    
+    return grid
+
+def place_diagonal_right_up(x_from, y_from, x_to, y_to, grid):
+
+    x = x_from
+    y = y_from
+    
+    for _ in range(x_from, x_to - 1, -1):
+        grid[y][x] += 1
+        x -= 1
+        y -= 1
+
+    return grid
+
+def place_diagonal_right_down(x_from, y_from, x_to, y_to, grid):
+    
+    x = x_from
+    y = y_from
+    
+    for _ in range(x_from, x_to - 1, -1):
+        grid[y][x] += 1
+        x -= 1
+        y += 1
+
+    return grid
+
+    
 
 
-def draw_line(mat, x0, y0, x1, y1, inplace=False):
-    if not (0 <= x0 < mat.shape[0] and 0 <= x1 < mat.shape[0] and
-            0 <= y0 < mat.shape[1] and 0 <= y1 < mat.shape[1]):
-        return mat
-    if not inplace:
-        mat = mat.copy()
-    if (x0, y0) == (x1, y1):
-        mat[x0, y0] = 2
-        return mat if not inplace else None
-    # Swap axes if Y slope is smaller than X slope
-    transpose = abs(x1 - x0) < abs(y1 - y0)
-    if transpose:
-        mat = mat.T
-        x0, y0, x1, y1 = y0, x0, y1, x1
-    # Swap line direction to go left-to-right if necessary
-    if x0 > x1:
-        x0, y0, x1, y1 = x1, y1, x0, y0
-    # Write line ends
-    mat[x0, y0] += 1
-    mat[x1, y1] += 1
-    # Compute intermediate coordinates using line equation
-    x = np.arange(x0 + 1, x1)
-    y = np.round(((y1 - y0) / (x1 - x0)) * (x - x0) + y0).astype(x.dtype)
-    # Write intermediate coordinates
-    mat[x, y] += 1
-    if not inplace:
-        return mat if not transpose else mat.T
 
 def print_grid(grid):
 
@@ -103,23 +158,6 @@ def print_grid(grid):
         ggrid += r + '\n'
     
     print(ggrid)
-
-
-'''
-1 1
-2 2
-3 3   
-
-9 4     
-8 4     
-7 4     
-6 4     
-5 4     
-3 4     
-'''
-
-            
-
     
 
 def create_grid(inp: list[list]) -> list[list]:
